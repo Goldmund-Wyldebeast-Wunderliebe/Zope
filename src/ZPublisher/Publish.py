@@ -34,6 +34,10 @@ from .pubevents import PubSuccess
 from .Request import Request
 from .Response import Response
 
+import time
+from logging import getLogger
+import Globals
+LOG = getLogger('ZServer')
 
 class Retry(Exception):
     """Raise this to retry a request
@@ -86,6 +90,8 @@ def publish(request, module_name, after_list, debug=0,
     response=None
 
     try:
+        time_started = time.clock()
+
         notify(PubStart(request))
         # TODO pass request here once BaseRequest implements IParticipation
         newInteraction()
@@ -145,6 +151,9 @@ def publish(request, module_name, after_list, debug=0,
         endInteraction()
 
         notify(PubSuccess(request))
+
+        if Globals.DevelopmentMode and not path.endswith( ( '.css', '.js', '.kss', '.png', '.gif', '.jpg' ) ):
+            LOG.info('Request: ' + str(int((time.clock() - time_started)*1000)).rjust(4) + 'ms @ ' + path)
 
         return response
     except:
